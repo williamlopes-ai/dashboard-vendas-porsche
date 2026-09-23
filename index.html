@@ -1,0 +1,1039 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Dashboard interativo para análise de uma base demonstrativa de vendas Porsche.">
+  <meta name="theme-color" content="#090b0f">
+  <title>Porsche Sales Intelligence</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090b0f;
+      --surface: #11151b;
+      --surface-strong: #171c24;
+      --surface-soft: #1d232d;
+      --line: #2a313d;
+      --text: #f5f7fa;
+      --muted: #9ca7b6;
+      --accent: #e00024;
+      --accent-soft: rgba(224, 0, 36, 0.14);
+      --gold: #d6b36a;
+      --blue: #78a7ff;
+      --green: #52c79c;
+      --orange: #f19b5a;
+      --radius: 18px;
+      --shadow: 0 20px 55px rgba(0, 0, 0, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 82% 2%, rgba(224, 0, 36, 0.16), transparent 28rem),
+        linear-gradient(180deg, #090b0f 0%, #0d1117 54%, #090b0f 100%);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+
+    button, select { font: inherit; }
+
+    button:focus-visible, select:focus-visible {
+      outline: 3px solid rgba(120, 167, 255, 0.7);
+      outline-offset: 2px;
+    }
+
+    .shell {
+      width: min(1480px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 24px 0 44px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 10px 0 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 12px;
+      background: linear-gradient(145deg, #2a3039, #11151a);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      color: var(--accent);
+      font-weight: 900;
+    }
+
+    .brand-copy strong {
+      display: block;
+      font-size: 0.88rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .brand-copy span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(17, 21, 27, 0.82);
+      color: #c6ced9;
+      font-size: 0.78rem;
+    }
+
+    .status-pill::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 5px rgba(82, 199, 156, 0.11);
+      content: "";
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.72fr);
+      gap: 22px;
+      align-items: stretch;
+      margin-bottom: 22px;
+    }
+
+    .hero-main, .hero-note, .filter-panel, .kpi-card, .panel {
+      border: 1px solid var(--line);
+      background: rgba(17, 21, 27, 0.86);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .hero-main {
+      position: relative;
+      overflow: hidden;
+      min-height: 250px;
+      padding: clamp(28px, 5vw, 58px);
+      border-radius: 26px;
+    }
+
+    .hero-main::after {
+      position: absolute;
+      right: -4rem;
+      bottom: -8rem;
+      width: 24rem;
+      height: 24rem;
+      border: 5rem solid rgba(224, 0, 36, 0.08);
+      border-radius: 50%;
+      content: "";
+    }
+
+    .eyebrow {
+      position: relative;
+      z-index: 1;
+      margin: 0 0 14px;
+      color: var(--gold);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0;
+      font-size: clamp(2.25rem, 5vw, 4.9rem);
+      font-weight: 780;
+      letter-spacing: -0.055em;
+      line-height: 0.98;
+    }
+
+    .hero-description {
+      position: relative;
+      z-index: 1;
+      max-width: 780px;
+      margin: 22px 0 0;
+      color: #b9c2ce;
+      font-size: clamp(0.96rem, 1.3vw, 1.12rem);
+      line-height: 1.7;
+    }
+
+    .hero-note {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 28px;
+      border-radius: 26px;
+      background:
+        linear-gradient(150deg, rgba(224, 0, 36, 0.14), transparent 62%),
+        rgba(17, 21, 27, 0.9);
+    }
+
+    .hero-note-label {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .hero-note strong {
+      display: block;
+      margin: 14px 0 8px;
+      font-size: clamp(2.8rem, 6vw, 5.4rem);
+      letter-spacing: -0.06em;
+      line-height: 1;
+    }
+
+    .hero-note p {
+      margin: 0;
+      color: #bcc5d0;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .hero-note footer {
+      margin-top: 28px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.09);
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .filter-panel {
+      position: sticky;
+      top: 10px;
+      z-index: 10;
+      margin-bottom: 22px;
+      padding: 18px;
+      border-radius: var(--radius);
+    }
+
+    .filter-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .filter-head h2, .panel h2 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: -0.015em;
+    }
+
+    .result-count {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr)) auto auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .field label {
+      display: block;
+      margin: 0 0 6px 2px;
+      color: var(--muted);
+      font-size: 0.71rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    select, .button {
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: #0e1217;
+      color: var(--text);
+    }
+
+    select {
+      width: 100%;
+      padding: 0 38px 0 12px;
+      cursor: pointer;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 14px;
+      cursor: pointer;
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      border-color: #596375;
+      background: #171c23;
+    }
+
+    .button-primary {
+      border-color: rgba(224, 0, 36, 0.5);
+      background: var(--accent);
+    }
+
+    .button-primary:hover { background: #fa1738; }
+
+    .active-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      min-height: 24px;
+      margin-top: 12px;
+    }
+
+    .filter-chip {
+      padding: 5px 9px;
+      border: 1px solid rgba(224, 0, 36, 0.3);
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: #ffb5c1;
+      font-size: 0.7rem;
+    }
+
+    .no-filter-chip {
+      color: #7f8996;
+      font-size: 0.72rem;
+      line-height: 24px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .kpi-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 154px;
+      padding: 22px;
+      border-radius: var(--radius);
+    }
+
+    .kpi-card::after {
+      position: absolute;
+      right: -28px;
+      bottom: -36px;
+      width: 104px;
+      height: 104px;
+      border: 24px solid rgba(255, 255, 255, 0.025);
+      border-radius: 50%;
+      content: "";
+    }
+
+    .kpi-label {
+      color: var(--muted);
+      font-size: 0.71rem;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .kpi-value {
+      position: relative;
+      z-index: 1;
+      display: block;
+      margin-top: 20px;
+      overflow: hidden;
+      font-size: clamp(1.55rem, 2.7vw, 2.45rem);
+      font-weight: 760;
+      letter-spacing: -0.045em;
+      line-height: 1.05;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .kpi-detail {
+      position: relative;
+      z-index: 1;
+      display: block;
+      margin-top: 9px;
+      color: #8792a2;
+      font-size: 0.73rem;
+    }
+
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .panel {
+      min-width: 0;
+      padding: 24px;
+      border-radius: var(--radius);
+    }
+
+    .panel-full { grid-column: 1 / -1; }
+
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .panel-kicker {
+      margin: 0 0 8px;
+      color: var(--gold);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .panel-copy {
+      max-width: 540px;
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.55;
+    }
+
+    .insight-badge {
+      flex: 0 0 auto;
+      max-width: 210px;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #0d1116;
+      color: #c5cdd8;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      text-align: right;
+    }
+
+    .bar-chart {
+      display: grid;
+      gap: 14px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 122px minmax(100px, 1fr) 86px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .bar-label {
+      overflow: hidden;
+      color: #c7d0db;
+      font-size: 0.78rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bar-track {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: #252b34;
+    }
+
+    .bar-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), #ff647c);
+      transition: width 450ms cubic-bezier(.2,.7,.2,1);
+    }
+
+    .bar-fill.blue { background: linear-gradient(90deg, #477dde, var(--blue)); }
+
+    .bar-value {
+      color: #edf1f6;
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .payment-layout {
+      display: grid;
+      grid-template-columns: minmax(150px, 0.78fr) minmax(180px, 1fr);
+      gap: 28px;
+      align-items: center;
+    }
+
+    .donut-wrap {
+      position: relative;
+      width: min(220px, 100%);
+      aspect-ratio: 1;
+      margin: auto;
+    }
+
+    .donut {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(#313743 0 100%);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .donut-hole {
+      position: absolute;
+      inset: 23%;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: var(--surface);
+      text-align: center;
+    }
+
+    .donut-hole strong { font-size: 1.5rem; }
+    .donut-hole span { display: block; margin-top: 2px; color: var(--muted); font-size: 0.65rem; }
+
+    .legend { display: grid; gap: 12px; }
+
+    .legend-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      font-size: 0.77rem;
+    }
+
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .legend-label { color: #c5ced9; }
+    .legend-value { color: var(--muted); }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 780px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #0e1218;
+      color: #8994a3;
+      font-size: 0.67rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    td { color: #c7d0da; font-size: 0.76rem; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover td { background: rgba(255, 255, 255, 0.018); }
+
+    .model-cell { color: var(--text); font-weight: 700; }
+
+    .empty-state {
+      display: grid;
+      min-height: 180px;
+      place-items: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    .page-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 28px 4px 0;
+      color: #707a87;
+      font-size: 0.69rem;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 1120px) {
+      .filters { grid-template-columns: repeat(4, minmax(130px, 1fr)); }
+      .button { grid-column: span 2; }
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .analysis-grid { grid-template-columns: 1fr; }
+      .panel-full { grid-column: auto; }
+    }
+
+    @media (max-width: 780px) {
+      .shell { width: min(100% - 24px, 1480px); padding-top: 10px; }
+      .topbar { padding-bottom: 16px; }
+      .brand-copy span, .status-pill { display: none; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-main { min-height: 0; padding: 34px 26px; }
+      .hero-note { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+      .hero-note footer { grid-column: 1 / -1; margin-top: 0; }
+      .filter-panel { position: static; }
+      .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .button { grid-column: auto; }
+      .payment-layout { grid-template-columns: 1fr; }
+      .donut-wrap { width: 180px; }
+      .page-footer { flex-direction: column; }
+    }
+
+    @media (max-width: 520px) {
+      .hero-note, .kpi-grid, .filters { grid-template-columns: 1fr; }
+      .button { grid-column: auto; }
+      .filter-head, .panel-head { align-items: flex-start; flex-direction: column; }
+      .insight-badge { max-width: none; text-align: left; }
+      .bar-row { grid-template-columns: 86px minmax(80px, 1fr) 68px; gap: 8px; }
+      .panel { padding: 20px 16px; }
+      .kpi-card { min-height: 138px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand" aria-label="Porsche Sales Intelligence">
+        <div class="brand-mark" aria-hidden="true">PS</div>
+        <div class="brand-copy">
+          <strong>Sales Intelligence</strong>
+          <span>Decisões comerciais orientadas por dados</span>
+        </div>
+      </div>
+      <div class="status-pill">Base validada · 100 registros</div>
+    </header>
+
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-main">
+        <p class="eyebrow">Portfólio de análise de dados</p>
+        <h1 id="page-title">Performance de vendas em uma visão executiva.</h1>
+        <p class="hero-description">
+          Um painel interativo para identificar os modelos que mais geram receita, os mercados com maior volume e as preferências de pagamento.
+        </p>
+      </div>
+      <aside class="hero-note" aria-label="Resumo da base">
+        <div>
+          <span class="hero-note-label">Escopo analisado</span>
+          <strong>100</strong>
+          <p>vendas demonstrativas, tratadas e anonimizadas para uso educacional.</p>
+        </div>
+        <footer>Período de venda: jan–dez/2025 · 8 estados brasileiros</footer>
+      </aside>
+    </section>
+
+    <section class="filter-panel" aria-labelledby="filter-title">
+      <div class="filter-head">
+        <h2 id="filter-title">Refine a análise</h2>
+        <span class="result-count" id="result-count" aria-live="polite">100 de 100 vendas</span>
+      </div>
+      <div class="filters">
+        <div class="field">
+          <label for="model-filter">Modelo</label>
+          <select id="model-filter"><option value="">Todos os modelos</option></select>
+        </div>
+        <div class="field">
+          <label for="state-filter">Estado</label>
+          <select id="state-filter"><option value="">Todos os estados</option></select>
+        </div>
+        <div class="field">
+          <label for="year-filter">Ano do modelo</label>
+          <select id="year-filter"><option value="">Todos os anos</option></select>
+        </div>
+        <div class="field">
+          <label for="payment-filter">Pagamento</label>
+          <select id="payment-filter"><option value="">Todos os métodos</option></select>
+        </div>
+        <button class="button" id="reset-button" type="button">Limpar filtros</button>
+        <button class="button button-primary" id="export-button" type="button">Exportar recorte</button>
+      </div>
+      <div class="active-filters" id="active-filters" aria-label="Filtros ativos"></div>
+    </section>
+
+    <section class="kpi-grid" aria-label="Indicadores principais">
+      <article class="kpi-card">
+        <span class="kpi-label">Receita total</span>
+        <strong class="kpi-value" id="revenue-kpi">—</strong>
+        <span class="kpi-detail">soma das vendas selecionadas</span>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-label">Vendas</span>
+        <strong class="kpi-value" id="sales-kpi">—</strong>
+        <span class="kpi-detail">transações no recorte atual</span>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-label">Ticket médio</span>
+        <strong class="kpi-value" id="ticket-kpi">—</strong>
+        <span class="kpi-detail">receita média por veículo</span>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-label">Modelo líder</span>
+        <strong class="kpi-value" id="leader-kpi">—</strong>
+        <span class="kpi-detail" id="leader-detail">maior participação na receita</span>
+      </article>
+    </section>
+
+    <section class="analysis-grid" aria-label="Análises de negócio">
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">Pergunta 01</p>
+            <h2>Quais modelos geram mais receita?</h2>
+            <p class="panel-copy">O ranking ajuda a direcionar esforço comercial e leitura de mix para as linhas de maior impacto financeiro.</p>
+          </div>
+          <div class="insight-badge" id="model-insight">Calculando insight…</div>
+        </div>
+        <div class="bar-chart" id="model-chart" role="img" aria-label="Receita por modelo"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">Pergunta 02</p>
+            <h2>Como os clientes preferem pagar?</h2>
+            <p class="panel-copy">A distribuição apoia decisões sobre campanhas, crédito e condições comerciais.</p>
+          </div>
+        </div>
+        <div class="payment-layout" id="payment-chart"></div>
+      </article>
+
+      <article class="panel panel-full">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">Pergunta 03</p>
+            <h2>Quais estados concentram o volume de vendas?</h2>
+            <p class="panel-copy">A leitura regional destaca oportunidades de alocação de estoque e ações locais.</p>
+          </div>
+          <div class="insight-badge" id="state-insight">Calculando insight…</div>
+        </div>
+        <div class="bar-chart" id="state-chart" role="img" aria-label="Volume de vendas por estado"></div>
+      </article>
+
+      <article class="panel panel-full">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">Base auditável</p>
+            <h2>Vendas do recorte atual</h2>
+            <p class="panel-copy">As dez transações mais recentes permitem conferir o detalhe por trás dos indicadores.</p>
+          </div>
+          <div class="insight-badge" id="table-insight">10 registros exibidos</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Data</th>
+                <th>Modelo</th>
+                <th>Ano</th>
+                <th>Cidade / UF</th>
+                <th>Pagamento</th>
+                <th>Valor</th>
+              </tr>
+            </thead>
+            <tbody id="sales-table"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <footer class="page-footer">
+      <span>Projeto educacional independente · Base fictícia e sanitizada · Nenhum dado pessoal utilizado</span>
+      <span>Porsche é marca de seus respectivos titulares.</span>
+    </footer>
+  </main>
+
+  <script>
+    const modelCatalog = [
+      { name: "911 Carrera", basePrice: 980000 },
+      { name: "Macan", basePrice: 530000 },
+      { name: "Cayenne", basePrice: 820000 },
+      { name: "Taycan", basePrice: 760000 },
+      { name: "Panamera", basePrice: 890000 },
+      { name: "718 Cayman", basePrice: 650000 }
+    ];
+
+    const locations = [
+      { city: "São Paulo", state: "SP" },
+      { city: "Rio de Janeiro", state: "RJ" },
+      { city: "Curitiba", state: "PR" },
+      { city: "Belo Horizonte", state: "MG" },
+      { city: "Brasília", state: "DF" },
+      { city: "Porto Alegre", state: "RS" },
+      { city: "Recife", state: "PE" },
+      { city: "Salvador", state: "BA" }
+    ];
+
+    const paymentMethods = ["Financiamento", "À vista", "Leasing", "Consórcio"];
+
+    // Base demonstrativa reproduzível: 100 vendas, sem dados pessoais ou aleatoriedade.
+    const sales = Array.from({ length: 100 }, (_, index) => {
+      const model = modelCatalog[index % modelCatalog.length];
+      const location = locations[(index * 5 + 3) % locations.length];
+      const modelYear = 2022 + ((index * 3 + Math.floor(index / 6)) % 4);
+      const month = (index * 7 + 2) % 12;
+      const day = ((index * 11 + 5) % 27) + 1;
+      const variation = 1 + (((index * 17) % 23) - 11) / 100;
+      const price = Math.round((model.basePrice * variation) / 1000) * 1000;
+
+      return {
+        id: `PV-2025-${String(index + 1).padStart(3, "0")}`,
+        date: `2025-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+        model: model.name,
+        modelYear,
+        city: location.city,
+        state: location.state,
+        payment: paymentMethods[(index * 3 + Math.floor(index / 5)) % paymentMethods.length],
+        price
+      };
+    });
+
+    const palette = ["#e00024", "#d6b36a", "#78a7ff", "#52c79c"];
+    const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+    const compactCurrency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", notation: "compact", maximumFractionDigits: 1 });
+    const dateFormat = new Intl.DateTimeFormat("pt-BR");
+
+    const elements = {
+      model: document.querySelector("#model-filter"),
+      state: document.querySelector("#state-filter"),
+      year: document.querySelector("#year-filter"),
+      payment: document.querySelector("#payment-filter"),
+      reset: document.querySelector("#reset-button"),
+      export: document.querySelector("#export-button"),
+      activeFilters: document.querySelector("#active-filters"),
+      resultCount: document.querySelector("#result-count"),
+      revenueKpi: document.querySelector("#revenue-kpi"),
+      salesKpi: document.querySelector("#sales-kpi"),
+      ticketKpi: document.querySelector("#ticket-kpi"),
+      leaderKpi: document.querySelector("#leader-kpi"),
+      leaderDetail: document.querySelector("#leader-detail"),
+      modelChart: document.querySelector("#model-chart"),
+      paymentChart: document.querySelector("#payment-chart"),
+      stateChart: document.querySelector("#state-chart"),
+      modelInsight: document.querySelector("#model-insight"),
+      stateInsight: document.querySelector("#state-insight"),
+      table: document.querySelector("#sales-table"),
+      tableInsight: document.querySelector("#table-insight")
+    };
+
+    const uniqueSorted = (key, numeric = false) => {
+      const values = [...new Set(sales.map((sale) => sale[key]))];
+      return values.sort((a, b) => numeric ? b - a : String(a).localeCompare(String(b), "pt-BR"));
+    };
+
+    const fillSelect = (select, values) => {
+      values.forEach((value) => select.add(new Option(value, value)));
+    };
+
+    fillSelect(elements.model, uniqueSorted("model"));
+    fillSelect(elements.state, uniqueSorted("state"));
+    fillSelect(elements.year, uniqueSorted("modelYear", true));
+    fillSelect(elements.payment, uniqueSorted("payment"));
+
+    const params = new URLSearchParams(window.location.search);
+    [[elements.model, "model"], [elements.state, "state"], [elements.year, "year"], [elements.payment, "payment"]]
+      .forEach(([select, key]) => {
+        const value = params.get(key);
+        if (value && [...select.options].some((option) => option.value === value)) select.value = value;
+      });
+
+    const aggregate = (rows, key, valueKey = null) => {
+      const totals = rows.reduce((result, row) => {
+        result[row[key]] = (result[row[key]] || 0) + (valueKey ? row[valueKey] : 1);
+        return result;
+      }, {});
+      return Object.entries(totals).sort((a, b) => b[1] - a[1]);
+    };
+
+    const emptyMarkup = (message) => `<div class="empty-state">${message}</div>`;
+
+    const renderBars = (target, items, formatter, colorClass = "") => {
+      if (!items.length) {
+        target.innerHTML = emptyMarkup("Nenhum dado disponível para esta combinação de filtros.");
+        return;
+      }
+      const max = items[0][1] || 1;
+      target.innerHTML = items.map(([label, value]) => `
+        <div class="bar-row">
+          <span class="bar-label" title="${label}">${label}</span>
+          <span class="bar-track" aria-hidden="true"><span class="bar-fill ${colorClass}" style="width:${Math.max((value / max) * 100, 3)}%"></span></span>
+          <span class="bar-value">${formatter(value)}</span>
+        </div>
+      `).join("");
+    };
+
+    const renderPayment = (rows) => {
+      const items = aggregate(rows, "payment");
+      if (!items.length) {
+        elements.paymentChart.innerHTML = emptyMarkup("Nenhum método de pagamento no recorte.");
+        return;
+      }
+      const total = rows.length;
+      let cursor = 0;
+      const segments = items.map(([, value], index) => {
+        const start = cursor;
+        cursor += (value / total) * 100;
+        return `${palette[index % palette.length]} ${start.toFixed(2)}% ${cursor.toFixed(2)}%`;
+      }).join(", ");
+
+      const legend = items.map(([label, value], index) => `
+        <div class="legend-row">
+          <span class="legend-dot" style="background:${palette[index % palette.length]}"></span>
+          <span class="legend-label">${label}</span>
+          <span class="legend-value">${value} · ${Math.round((value / total) * 100)}%</span>
+        </div>
+      `).join("");
+
+      elements.paymentChart.innerHTML = `
+        <div class="donut-wrap">
+          <div class="donut" style="background:conic-gradient(${segments})"></div>
+          <div class="donut-hole"><div><strong>${total}</strong><span>vendas</span></div></div>
+        </div>
+        <div class="legend">${legend}</div>
+      `;
+    };
+
+    const renderTable = (rows) => {
+      const visible = [...rows].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+      elements.tableInsight.textContent = visible.length ? `${visible.length} de ${rows.length} registros exibidos` : "Nenhum registro exibido";
+      elements.table.innerHTML = visible.length ? visible.map((sale) => `
+        <tr>
+          <td>${sale.id}</td>
+          <td>${dateFormat.format(new Date(`${sale.date}T12:00:00`))}</td>
+          <td class="model-cell">${sale.model}</td>
+          <td>${sale.modelYear}</td>
+          <td>${sale.city} / ${sale.state}</td>
+          <td>${sale.payment}</td>
+          <td>${currency.format(sale.price)}</td>
+        </tr>
+      `).join("") : `<tr><td colspan="7"><div class="empty-state">Ajuste ou limpe os filtros para visualizar vendas.</div></td></tr>`;
+    };
+
+    const activeSelection = () => ({
+      model: elements.model.value,
+      state: elements.state.value,
+      year: elements.year.value,
+      payment: elements.payment.value
+    });
+
+    const filteredSales = () => {
+      const filters = activeSelection();
+      return sales.filter((sale) =>
+        (!filters.model || sale.model === filters.model) &&
+        (!filters.state || sale.state === filters.state) &&
+        (!filters.year || String(sale.modelYear) === filters.year) &&
+        (!filters.payment || sale.payment === filters.payment)
+      );
+    };
+
+    const renderFilterChips = () => {
+      const filters = activeSelection();
+      const labels = { model: "Modelo", state: "Estado", year: "Ano", payment: "Pagamento" };
+      const active = Object.entries(filters).filter(([, value]) => value);
+      elements.activeFilters.innerHTML = active.length
+        ? active.map(([key, value]) => `<span class="filter-chip">${labels[key]}: ${value}</span>`).join("")
+        : `<span class="no-filter-chip">Visão completa da base · selecione um filtro para aprofundar</span>`;
+    };
+
+    const updateDashboard = () => {
+      const rows = filteredSales();
+      const revenue = rows.reduce((sum, sale) => sum + sale.price, 0);
+      const modelRevenue = aggregate(rows, "model", "price");
+      const stateVolume = aggregate(rows, "state");
+      const leader = modelRevenue[0];
+
+      elements.resultCount.textContent = `${rows.length} de ${sales.length} vendas`;
+      elements.revenueKpi.textContent = compactCurrency.format(revenue);
+      elements.revenueKpi.title = currency.format(revenue);
+      elements.salesKpi.textContent = String(rows.length);
+      elements.ticketKpi.textContent = rows.length ? compactCurrency.format(revenue / rows.length) : "—";
+      elements.ticketKpi.title = rows.length ? currency.format(revenue / rows.length) : "Sem vendas";
+      elements.leaderKpi.textContent = leader ? leader[0] : "—";
+      elements.leaderDetail.textContent = leader && revenue
+        ? `${Math.round((leader[1] / revenue) * 100)}% da receita selecionada`
+        : "maior participação na receita";
+
+      renderBars(elements.modelChart, modelRevenue, compactCurrency.format);
+      renderBars(elements.stateChart, stateVolume, (value) => `${value} venda${value === 1 ? "" : "s"}`, "blue");
+      renderPayment(rows);
+      renderTable(rows);
+      renderFilterChips();
+
+      elements.modelInsight.textContent = leader
+        ? `${leader[0]} lidera com ${compactCurrency.format(leader[1])}`
+        : "Sem receita no recorte";
+      elements.stateInsight.textContent = stateVolume[0]
+        ? `${stateVolume[0][0]} concentra ${Math.round((stateVolume[0][1] / rows.length) * 100)}% das vendas`
+        : "Sem volume no recorte";
+    };
+
+    const resetFilters = () => {
+      [elements.model, elements.state, elements.year, elements.payment].forEach((select) => { select.value = ""; });
+      history.replaceState({}, "", window.location.pathname);
+      updateDashboard();
+    };
+
+    const escapeCsv = (value) => `"${String(value).replaceAll('"', '""')}"`;
+
+    const exportCsv = () => {
+      const rows = filteredSales();
+      const header = ["ID", "Data", "Modelo", "Ano", "Cidade", "UF", "Pagamento", "Valor"];
+      const body = rows.map((sale) => [sale.id, sale.date, sale.model, sale.modelYear, sale.city, sale.state, sale.payment, sale.price]);
+      const csv = [header, ...body].map((row) => row.map(escapeCsv).join(";")).join("\n");
+      const blob = new Blob(["\ufeff", csv], { type: "text/csv;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "vendas-porsche-filtradas.csv";
+      link.click();
+      URL.revokeObjectURL(link.href);
+    };
+
+    [elements.model, elements.state, elements.year, elements.payment]
+      .forEach((select) => select.addEventListener("change", updateDashboard));
+    elements.reset.addEventListener("click", resetFilters);
+    elements.export.addEventListener("click", exportCsv);
+
+    updateDashboard();
+  </script>
+</body>
+</html>
